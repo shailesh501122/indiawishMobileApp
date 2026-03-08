@@ -42,15 +42,22 @@ class MarketplaceProvider with ChangeNotifier {
 
   Future<void> fetchListings({
     String? categoryId,
+    String? subcategoryId,
     Map<String, dynamic>? filters,
   }) async {
     _isLoading = true;
     notifyListeners();
 
-    _listings = await _apiService.getListings(
-      categoryId: categoryId,
-      filters: filters,
-    );
+    try {
+      _listings = await _apiService.getListings(
+        categoryId: categoryId,
+        subcategoryId: subcategoryId,
+        filters: filters,
+      );
+    } catch (e) {
+      debugPrint('Error fetching listings: $e');
+      _listings = [];
+    }
 
     _isLoading = false;
     notifyListeners();

@@ -4,7 +4,8 @@ import '../../core/constants.dart';
 import '../../providers/marketplace_provider.dart';
 import '../../widgets/listing_card.dart';
 import '../marketplace/listing_detail_screen.dart';
-import '../marketplace/category_listings_screen.dart';
+import '../marketplace/category_selection_screen.dart';
+import '../../models/category.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import '../../providers/config_provider.dart';
@@ -184,13 +185,18 @@ class _HomeScreenState extends State<HomeScreen> {
                               context: context,
                               isScrollControlled: true,
                               backgroundColor: Colors.transparent,
-                              builder: (context) => const LocationSelectorModal(),
+                              builder: (context) =>
+                                  const LocationSelectorModal(),
                             );
                           },
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.location_on, color: darkBlue, size: 14),
+                              const Icon(
+                                Icons.location_on,
+                                color: darkBlue,
+                                size: 14,
+                              ),
                               const SizedBox(width: 4),
                               Flexible(
                                 child: Text(
@@ -204,7 +210,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                               ),
-                              const Icon(Icons.keyboard_arrow_down, color: darkBlue, size: 16),
+                              const Icon(
+                                Icons.keyboard_arrow_down,
+                                color: darkBlue,
+                                size: 16,
+                              ),
                             ],
                           ),
                         );
@@ -305,18 +315,33 @@ class _HomeScreenState extends State<HomeScreen> {
         final name = item.name.toLowerCase();
 
         // Direct Material Icon Map
-        if (backendIcon == 'directions_car' || name.contains('vehicle')) iconData = Icons.directions_car;
-        else if (backendIcon == 'work' || name.contains('service') || name.contains('job')) iconData = Icons.work;
-        else if (backendIcon == 'smartphone' || name.contains('mobile')) iconData = Icons.smartphone;
-        else if (backendIcon == 'kitchen' || name.contains('electronic')) iconData = Icons.kitchen;
-        else if (backendIcon == 'home' || name.contains('real estate') || name.contains('property')) iconData = Icons.home;
-        else if (backendIcon == 'checkroom' || name.contains('fashion')) iconData = Icons.checkroom;
-        else if (backendIcon == 'business' || name.contains('commercial')) iconData = Icons.business;
-        else if (backendIcon == 'two_wheeler' || name.contains('bike')) iconData = Icons.two_wheeler;
-        else if (backendIcon == 'chair' || name.contains('furniture')) iconData = Icons.chair;
-        else if (backendIcon == 'pets' || name.contains('pet')) iconData = Icons.pets;
-        else if (backendIcon == 'shopping_bag') iconData = Icons.shopping_bag;
-        
+        if (backendIcon == 'directions_car' || name.contains('vehicle'))
+          iconData = Icons.directions_car;
+        else if (backendIcon == 'work' ||
+            name.contains('service') ||
+            name.contains('job'))
+          iconData = Icons.work;
+        else if (backendIcon == 'smartphone' || name.contains('mobile'))
+          iconData = Icons.smartphone;
+        else if (backendIcon == 'kitchen' || name.contains('electronic'))
+          iconData = Icons.kitchen;
+        else if (backendIcon == 'home' ||
+            name.contains('real estate') ||
+            name.contains('property'))
+          iconData = Icons.home;
+        else if (backendIcon == 'checkroom' || name.contains('fashion'))
+          iconData = Icons.checkroom;
+        else if (backendIcon == 'business' || name.contains('commercial'))
+          iconData = Icons.business;
+        else if (backendIcon == 'two_wheeler' || name.contains('bike'))
+          iconData = Icons.two_wheeler;
+        else if (backendIcon == 'chair' || name.contains('furniture'))
+          iconData = Icons.chair;
+        else if (backendIcon == 'pets' || name.contains('pet'))
+          iconData = Icons.pets;
+        else if (backendIcon == 'shopping_bag')
+          iconData = Icons.shopping_bag;
+
         // Final Fallback
         iconData ??= Icons.category_outlined;
 
@@ -324,7 +349,8 @@ class _HomeScreenState extends State<HomeScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => CategoryListingsScreen(category: item),
+              builder: (context) =>
+                  CategorySelectionScreen(initialCategory: item),
             ),
           );
         });
@@ -412,10 +438,18 @@ class _HomeScreenState extends State<HomeScreen> {
     // Temporary static list of services to showcase the UI immediately.
     // In the next step, this will be wired to a ServicesProvider.
     final List<Map<String, dynamic>> services = [
-      {'name': 'Housemaid', 'icon': Icons.cleaning_services, 'color': Colors.blue},
+      {
+        'name': 'Housemaid',
+        'icon': Icons.cleaning_services,
+        'color': Colors.blue,
+      },
       {'name': 'Cook/Chef', 'icon': Icons.soup_kitchen, 'color': Colors.orange},
       {'name': 'Plumber', 'icon': Icons.plumbing, 'color': Colors.grey},
-      {'name': 'Electrician', 'icon': Icons.electrical_services, 'color': Colors.amber},
+      {
+        'name': 'Electrician',
+        'icon': Icons.electrical_services,
+        'color': Colors.amber,
+      },
     ];
 
     return Container(
@@ -449,7 +483,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-              )
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -463,7 +497,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     MaterialPageRoute(
                       builder: (context) => ServicesListScreen(
                         categoryName: service['name'],
-                        categoryId: null, // Would map to actual DB ID in a full implementation
+                        categoryId:
+                            null, // Would map to actual DB ID in a full implementation
                       ),
                     ),
                   );
@@ -732,4 +767,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-

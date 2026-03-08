@@ -47,7 +47,10 @@ class ApiService {
     return await _dio.post(path, data: data);
   }
 
-  Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) async {
+  Future<Response> get(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
     return await _dio.get(path, queryParameters: queryParameters);
   }
 
@@ -174,11 +177,13 @@ class ApiService {
 
   Future<List<Listing>> getListings({
     String? categoryId,
+    String? subcategoryId,
     Map<String, dynamic>? filters,
   }) async {
     try {
       final Map<String, dynamic> queryParams = {};
       if (categoryId != null) queryParams['category_id'] = categoryId;
+      if (subcategoryId != null) queryParams['subcategory_id'] = subcategoryId;
       if (filters != null) queryParams.addAll(filters);
 
       final response = await _dio.get(
@@ -233,7 +238,8 @@ class ApiService {
         '/users/verify/phone/send',
         data: {'phone_number': phoneNumber},
       );
-      if (response.statusCode == 200) return Map<String, dynamic>.from(response.data);
+      if (response.statusCode == 200)
+        return Map<String, dynamic>.from(response.data);
     } catch (e) {
       debugPrint('Error sending OTP: $e');
     }
@@ -241,13 +247,17 @@ class ApiService {
   }
 
   /// Feature: Phone Verification — confirms OTP and upgrades verification_level.
-  Future<Map<String, dynamic>?> confirmPhoneOtp(String phoneNumber, String otp) async {
+  Future<Map<String, dynamic>?> confirmPhoneOtp(
+    String phoneNumber,
+    String otp,
+  ) async {
     try {
       final response = await _dio.post(
         '/users/verify/phone/confirm',
         data: {'phone_number': phoneNumber, 'otp': otp},
       );
-      if (response.statusCode == 200) return Map<String, dynamic>.from(response.data);
+      if (response.statusCode == 200)
+        return Map<String, dynamic>.from(response.data);
     } catch (e) {
       debugPrint('Error confirming OTP: $e');
     }
@@ -585,11 +595,7 @@ class ApiService {
     try {
       final response = await _dio.get(
         '/discovery/nearby',
-        queryParameters: {
-          'lat': lat,
-          'lng': lng,
-          'category': category,
-        },
+        queryParameters: {'lat': lat, 'lng': lng, 'category': category},
       );
       if (response.statusCode == 200) {
         return (response.data as List)
@@ -605,7 +611,10 @@ class ApiService {
 
   Future<List<Map<String, dynamic>>> searchLocations(String input) async {
     try {
-      final response = await _dio.get('/discovery/autocomplete', queryParameters: {'input': input});
+      final response = await _dio.get(
+        '/discovery/autocomplete',
+        queryParameters: {'input': input},
+      );
       if (response.statusCode == 200) {
         return List<Map<String, dynamic>>.from(response.data);
       }
@@ -618,7 +627,10 @@ class ApiService {
 
   Future<Map<String, double>?> getLocationDetails(String placeId) async {
     try {
-      final response = await _dio.get('/discovery/details', queryParameters: {'place_id': placeId});
+      final response = await _dio.get(
+        '/discovery/details',
+        queryParameters: {'place_id': placeId},
+      );
       if (response.statusCode == 200) {
         return {
           'lat': (response.data['lat'] as num).toDouble(),
@@ -658,7 +670,10 @@ class ApiService {
       if (categoryId != null) queryParams['category_id'] = categoryId;
       if (location != null) queryParams['location'] = location;
 
-      final response = await _dio.get('/services/search', queryParameters: queryParams);
+      final response = await _dio.get(
+        '/services/search',
+        queryParameters: queryParams,
+      );
       if (response.statusCode == 200) {
         return (response.data as List)
             .map((json) => ServiceProfile.fromJson(json))
@@ -671,11 +686,15 @@ class ApiService {
     }
   }
 
-  Future<ServiceBooking?> createServiceBooking(Map<String, dynamic> bookingData) async {
+  Future<ServiceBooking?> createServiceBooking(
+    Map<String, dynamic> bookingData,
+  ) async {
     try {
       final response = await _dio.post('/services/book', data: bookingData);
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return ServiceBooking.fromJson(Map<String, dynamic>.from(response.data));
+        return ServiceBooking.fromJson(
+          Map<String, dynamic>.from(response.data),
+        );
       }
       return null;
     } catch (e) {
@@ -684,9 +703,14 @@ class ApiService {
     }
   }
 
-  Future<List<ServiceBooking>> getMyServiceBookings({String role = 'customer'}) async {
+  Future<List<ServiceBooking>> getMyServiceBookings({
+    String role = 'customer',
+  }) async {
     try {
-      final response = await _dio.get('/services/bookings/me', queryParameters: {'role': role});
+      final response = await _dio.get(
+        '/services/bookings/me',
+        queryParameters: {'role': role},
+      );
       if (response.statusCode == 200) {
         return (response.data as List)
             .map((json) => ServiceBooking.fromJson(json))
@@ -699,4 +723,3 @@ class ApiService {
     }
   }
 }
-
