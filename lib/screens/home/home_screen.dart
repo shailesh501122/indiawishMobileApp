@@ -108,8 +108,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     _buildCategorySection(),
                     const SizedBox(height: 16),
-                    _buildDiscoverySection(),
-                    const SizedBox(height: 16),
                     _buildEliteBuyerBanner(),
                     _buildRecentInteractionsSection(context),
                     _buildFreshRecommendations(context),
@@ -629,115 +627,5 @@ class _HomeScreenState extends State<HomeScreen> {
       },
     );
   }
-
-  Widget _buildDiscoverySection() {
-    final List<Map<String, String>> discoveryCategories = [
-      {'id': 'tourist_attraction', 'name': 'Attractions', 'icon': 'map'},
-      {'id': 'restaurant', 'name': 'Restaurants', 'icon': 'restaurant'},
-      {'id': 'hotel', 'name': 'Hotels', 'icon': 'hotel'},
-      {'id': 'movie_theater', 'name': 'Movies', 'icon': 'movie'},
-      {'id': 'cafe', 'name': 'Cafes', 'icon': 'local_cafe'},
-      {'id': 'night_club', 'name': 'Clubs', 'icon': 'nightlife'},
-      {'id': 'shopping_mall', 'name': 'Malls', 'icon': 'local_mall'},
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'Discover Nearby',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppColors.primary,
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        // Discovery Category Filter
-        SizedBox(
-          height: 40,
-          child: Consumer<DiscoveryProvider>(
-            builder: (context, discovery, child) {
-              return ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                scrollDirection: Axis.horizontal,
-                itemCount: discoveryCategories.length,
-                itemBuilder: (context, index) {
-                  final cat = discoveryCategories[index];
-                  final isSelected = discovery.selectedCategory == cat['id'];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: ChoiceChip(
-                      label: Text(cat['name']!),
-                      selected: isSelected,
-                      onSelected: (selected) {
-                        if (selected) {
-                          discovery.setCategory(cat['id']!);
-                        }
-                      },
-                      selectedColor: AppColors.primary,
-                      labelStyle: TextStyle(
-                        color: isSelected ? Colors.white : AppColors.primary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      backgroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        side: BorderSide(
-                          color: isSelected ? Colors.transparent : AppColors.primary.withOpacity(0.3),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              );
-            },
-          ),
-        ),
-        const SizedBox(height: 16),
-        // Discovery Places List
-        SizedBox(
-          height: 250,
-          child: Consumer<DiscoveryProvider>(
-            builder: (context, discovery, child) {
-              if (discovery.isLoading) {
-                return const Center(
-                  child: CircularProgressIndicator(color: AppColors.primary),
-                );
-              }
-              
-              if (discovery.nearbyPlaces.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.search_off, size: 48, color: Colors.grey[400]),
-                      const SizedBox(height: 8),
-                      Text(
-                        'No places found nearby',
-                        style: TextStyle(color: Colors.grey[600]),
-                      ),
-                    ],
-                  ),
-                );
-              }
-
-              return ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                scrollDirection: Axis.horizontal,
-                itemCount: discovery.nearbyPlaces.length,
-                itemBuilder: (context, index) {
-                  return DiscoveryCard(place: discovery.nearbyPlaces[index]);
-                },
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
 }
+

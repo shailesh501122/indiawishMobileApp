@@ -4,6 +4,7 @@ import 'home/home_screen.dart';
 import 'chat/chat_list_screen.dart';
 import 'profile/profile_screen.dart';
 import 'marketplace/reels_screen.dart';
+import 'discovery/discovery_screen.dart';
 
 import 'package:provider/provider.dart';
 import '../providers/marketplace_provider.dart';
@@ -20,7 +21,7 @@ class MainScreensWrapper extends StatefulWidget {
 }
 
 class _MainScreensWrapperState extends State<MainScreensWrapper> {
-  // 0=Home, 1=Chats, 2=MyAds, 3=Account
+  // 0=Home, 1=Discovery, 2=MyAds, 3=Account
   // Index 2 in bottom nav is the "Sell" FAB (not a real screen)
   int _selectedIndex = 0;
 
@@ -61,7 +62,7 @@ class _MainScreensWrapperState extends State<MainScreensWrapper> {
   // Actual screens mapped to nav indices (0, 1, 3, 4 in visual bar)
   List<Widget> get _screens => [
     const HomeScreen(),
-    ReelsScreen(isActive: _selectedIndex == 1),
+    DiscoveryScreen(isActive: _selectedIndex == 1),
     const ChatListScreen(),
     const ProfileScreen(),
   ];
@@ -128,9 +129,9 @@ class _MainScreensWrapperState extends State<MainScreensWrapper> {
               _buildNavItem(0, Icons.home_rounded, Icons.home_outlined, 'Home'),
               _buildNavItem(
                 1,
-                Icons.play_circle_fill_rounded,
-                Icons.play_circle_outline_rounded,
-                'Reels',
+                Icons.travel_explore_rounded,
+                Icons.travel_explore_outlined,
+                'Discover',
               ),
               _buildSellButton(),
               _buildNavItem(
