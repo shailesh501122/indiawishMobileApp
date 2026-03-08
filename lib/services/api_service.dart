@@ -10,6 +10,9 @@ import '../models/user.dart';
 import '../models/category.dart';
 import '../models/config.dart';
 import '../models/discovery_place.dart';
+import '../models/service_profile.dart';
+import '../models/service_booking.dart';
+import '../models/service_category.dart';
 
 class ApiService {
   late final Dio _dio;
@@ -628,4 +631,72 @@ class ApiService {
       return null;
     }
   }
+
+  // ─── Home Services ────────────────────────────────────────────────────────
+
+  Future<List<ServiceCategory>> getServiceCategories() async {
+    try {
+      final response = await _dio.get('/services/categories');
+      if (response.statusCode == 200) {
+        return (response.data as List)
+            .map((json) => ServiceCategory.fromJson(json))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Error fetching service categories: $e');
+      return [];
+    }
+  }
+
+  Future<List<ServiceProfile>> searchServiceProfiles({
+    String? categoryId,
+    String? location,
+  }) async {
+    try {
+      final Map<String, dynamic> queryParams = {};
+      if (categoryId != null) queryParams['category_id'] = categoryId;
+      if (location != null) queryParams['location'] = location;
+
+      final response = await _dio.get('/services/search', queryParameters: queryParams);
+      if (response.statusCode == 200) {
+        return (response.data as List)
+            .map((json) => ServiceProfile.fromJson(json))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Error searching service profiles: $e');
+      return [];
+    }
+  }
+
+  Future<ServiceBooking?> createServiceBooking(Map<String, dynamic> bookingData) async {
+    try {
+      final response = await _dio.post('/services/book', data: bookingData);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return ServiceBooking.fromJson(Map<String, dynamic>.from(response.data));
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error creating service booking: $e');
+      return null;
+    }
+  }
+
+  Future<List<ServiceBooking>> getMyServiceBookings({String role = 'customer'}) async {
+    try {
+      final response = await _dio.get('/services/bookings/me', queryParameters: {'role': role});
+      if (response.statusCode == 200) {
+        return (response.data as List)
+            .map((json) => ServiceBooking.fromJson(json))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Error fetching my service bookings: $e');
+      return [];
+    }
+  }
 }
+

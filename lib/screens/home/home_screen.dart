@@ -11,6 +11,7 @@ import '../../providers/config_provider.dart';
 import '../../providers/discovery_provider.dart';
 import '../../widgets/location_selector_modal.dart';
 import '../../widgets/discovery_card.dart';
+import '../services/services_list_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -107,8 +108,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildCategorySection(),
+                    _buildHomeServicesSection(),
                     const SizedBox(height: 16),
                     _buildEliteBuyerBanner(),
+
                     _buildRecentInteractionsSection(context),
                     _buildFreshRecommendations(context),
                     const SizedBox(height: 80),
@@ -401,6 +404,107 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildHomeServicesSection() {
+    // Temporary static list of services to showcase the UI immediately.
+    // In the next step, this will be wired to a ServicesProvider.
+    final List<Map<String, dynamic>> services = [
+      {'name': 'Housemaid', 'icon': Icons.cleaning_services, 'color': Colors.blue},
+      {'name': 'Cook/Chef', 'icon': Icons.soup_kitchen, 'color': Colors.orange},
+      {'name': 'Plumber', 'icon': Icons.plumbing, 'color': Colors.grey},
+      {'name': 'Electrician', 'icon': Icons.electrical_services, 'color': Colors.amber},
+    ];
+
+    return Container(
+      color: AppColors.white,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Home Services',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.darkText,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  'NEW',
+                  style: TextStyle(
+                    color: Colors.red.shade700,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              )
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: services.map((service) {
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ServicesListScreen(
+                        categoryName: service['name'],
+                        categoryId: null, // Would map to actual DB ID in a full implementation
+                      ),
+                    ),
+                  );
+                },
+                child: Column(
+                  children: [
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: service['color'].withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: service['color'].withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Center(
+                        child: Icon(
+                          service['icon'],
+                          color: service['color'],
+                          size: 28,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      service['name'],
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.darkText,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ],
       ),
     );
   }
