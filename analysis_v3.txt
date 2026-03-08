@@ -1,0 +1,27 @@
+﻿Analyzing mobile_app...                                         
+
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\core\app_theme.dart:107:42 - deprecated_member_use
+   info - The private field _messages could be 'final' - lib\providers\chat_provider.dart:11:34 - prefer_final_fields
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\chat\chat_detail_screen.dart:156:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\chat\chat_detail_screen.dart:180:38 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\chat\chat_list_screen.dart:230:47 - deprecated_member_use
+warning - Unused import: 'properties/properties_screen.dart' - lib\screens\main_screens_wrapper.dart:5:8 - unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\marketplace\create_listing_screen.dart:145:66 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\marketplace\create_listing_screen.dart:203:65 - deprecated_member_use
+   info - Unnecessary use of 'toList' in a spread - lib\screens\marketplace\create_listing_screen.dart:217:34 - unnecessary_to_list_in_spreads
+   info - Statements in an if should be enclosed in a block - lib\screens\marketplace\create_listing_screen.dart:279:33 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\screens\marketplace\create_listing_screen.dart:281:33 - curly_braces_in_flow_control_structures
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\screens\marketplace\create_listing_screen.dart:287:29 - deprecated_member_use
+   info - Statements in an if should be enclosed in a block - lib\screens\marketplace\create_listing_screen.dart:299:33 - curly_braces_in_flow_control_structures
+   info - The private field _currentImageIndex could be 'final' - lib\screens\marketplace\listing_detail_screen.dart:21:7 - prefer_final_fields
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\marketplace\listing_detail_screen.dart:416:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\marketplace\my_listings_screen.dart:167:43 - deprecated_member_use
+   info - The private field _currentImageIndex could be 'final' - lib\screens\properties\property_detail_screen.dart:21:7 - prefer_final_fields
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\properties\property_detail_screen.dart:394:39 - deprecated_member_use
+   info - The prefix 'IO' isn't a lower_case_with_underscores identifier - lib\services\socket_service.dart:2:60 - library_prefixes
+   info - Don't invoke 'print' in production code - lib\services\socket_service.dart:47:29 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\socket_service.dart:76:32 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\socket_service.dart:77:36 - avoid_print
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\listing_card.dart:108:49 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\widgets\property_card.dart:100:47 - deprecated_member_use
+
