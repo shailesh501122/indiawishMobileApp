@@ -17,6 +17,8 @@ class CategorySelectionScreen extends StatefulWidget {
 
 class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
   int _selectedCategoryIndex = 0;
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -70,6 +72,15 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
           }
 
           final selectedCategory = provider.categories[_selectedCategoryIndex];
+          final subcategories =
+              selectedCategory.subcategories
+                  ?.where(
+                    (s) => s.name.toLowerCase().contains(
+                      _searchQuery.toLowerCase(),
+                    ),
+                  )
+                  .toList() ??
+              [];
 
           return Row(
             children: [
@@ -81,6 +92,7 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
                   border: Border(right: BorderSide(color: Colors.grey[200]!)),
                 ),
                 child: ListView.builder(
+                  padding: EdgeInsets.zero,
                   itemCount: provider.categories.length,
                   itemBuilder: (context, index) {
                     final category = provider.categories[index];
@@ -91,58 +103,68 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
                           setState(() => _selectedCategoryIndex = index),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                          vertical: 20,
+                          vertical: 16,
                           horizontal: 8,
                         ),
                         decoration: BoxDecoration(
                           color: isSelected ? Colors.white : Colors.transparent,
                           border: isSelected
                               ? const Border(
-                                  left: BorderSide(
+                                  right: BorderSide(
                                     color: AppColors.primary,
-                                    width: 4,
+                                    width: 3,
                                   ),
                                 )
                               : null,
                         ),
                         child: Column(
                           children: [
-                            if (category.icon != null &&
-                                category.icon!.isNotEmpty)
-                              Image.network(
-                                category.icon!.startsWith('http')
-                                    ? category.icon!
-                                    : '${ApiConfig.baseUrl.replaceAll('/api', '')}${category.icon!.startsWith('/') ? '' : '/'}${category.icon!.replaceAll('\\', '/')}',
-                                width: 28,
-                                height: 28,
-                                fit: BoxFit.contain,
-                                errorBuilder: (_, __, ___) => Icon(
-                                  Icons.category_outlined,
-                                  color: isSelected
-                                      ? AppColors.primary
-                                      : AppColors.grey,
-                                  size: 24,
-                                ),
-                              )
-                            else
-                              Icon(
-                                Icons.category_outlined,
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
                                 color: isSelected
-                                    ? AppColors.primary
-                                    : AppColors.grey,
+                                    ? AppColors.primary.withOpacity(0.05)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                            const SizedBox(height: 8),
+                              child:
+                                  category.icon != null &&
+                                      category.icon!.isNotEmpty
+                                  ? Image.network(
+                                      category.icon!.startsWith('http')
+                                          ? category.icon!
+                                          : '${ApiConfig.baseUrl.replaceAll('/api', '')}${category.icon!.startsWith('/') ? '' : '/'}${category.icon!.replaceAll('\\', '/')}',
+                                      width: 24,
+                                      height: 24,
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (_, __, ___) => Icon(
+                                        Icons.category_outlined,
+                                        color: isSelected
+                                            ? AppColors.primary
+                                            : AppColors.grey,
+                                        size: 20,
+                                      ),
+                                    )
+                                  : Icon(
+                                      Icons.category_outlined,
+                                      color: isSelected
+                                          ? AppColors.primary
+                                          : AppColors.grey,
+                                      size: 20,
+                                    ),
+                            ),
+                            const SizedBox(height: 6),
                             Text(
                               category.name,
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                fontSize: 11,
+                                fontSize: 10,
                                 fontWeight: isSelected
                                     ? FontWeight.bold
-                                    : FontWeight.normal,
+                                    : FontWeight.w500,
                                 color: isSelected
                                     ? AppColors.primary
-                                    : AppColors.darkText,
+                                    : AppColors.darkText.withOpacity(0.7),
                               ),
                             ),
                           ],
@@ -160,42 +182,64 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Search Bar
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: TextField(
+                          controller: _searchController,
+                          onChanged: (val) =>
+                              setState(() => _searchQuery = val),
+                          decoration: const InputDecoration(
+                            icon: Icon(
+                              Icons.search,
+                              size: 20,
+                              color: Colors.grey,
+                            ),
+                            border: InputBorder.none,
+                            hintText: 'Search...',
+                            hintStyle: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ),
+                      ),
                       Row(
                         children: [
                           Expanded(
                             child: Text(
                               selectedCategory.name,
                               style: const TextStyle(
-                                fontSize: 18,
+                                fontSize: 16,
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.darkText,
                               ),
                             ),
                           ),
-                          Container(
-                            height: 1,
-                            width: 50,
-                            color: Colors.grey[300],
-                          ),
                         ],
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
                       Expanded(
                         child: GridView.builder(
+                          padding: const EdgeInsets.only(
+                            bottom: 80,
+                          ), // Prevent overlay
                           gridDelegate:
                               const SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 3,
-                                childAspectRatio: 0.8,
-                                crossAxisSpacing: 12,
-                                mainAxisSpacing: 20,
+                                childAspectRatio: 0.75,
+                                crossAxisSpacing: 8,
+                                mainAxisSpacing: 16,
                               ),
-                          itemCount:
-                              (selectedCategory.subcategories?.length ?? 0) + 1,
+                          itemCount: subcategories.length + 1,
                           itemBuilder: (context, index) {
-                            if (index <
-                                (selectedCategory.subcategories?.length ?? 0)) {
-                              final subcat =
-                                  selectedCategory.subcategories![index];
+                            if (index < subcategories.length) {
+                              final subcat = subcategories[index];
                               return GestureDetector(
                                 onTap: () {
                                   Navigator.push(
