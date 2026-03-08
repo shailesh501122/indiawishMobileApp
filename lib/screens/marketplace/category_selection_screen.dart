@@ -107,16 +107,21 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
                         ),
                         child: Column(
                           children: [
-                            if (category.icon != null)
+                            if (category.icon != null &&
+                                category.icon!.isNotEmpty)
                               Image.network(
-                                category.icon!,
-                                width: 32,
-                                height: 32,
+                                category.icon!.startsWith('http')
+                                    ? category.icon!
+                                    : '${ApiConfig.baseUrl.replaceAll('/api', '')}${category.icon!.startsWith('/') ? '' : '/'}${category.icon!.replaceAll('\\', '/')}',
+                                width: 28,
+                                height: 28,
+                                fit: BoxFit.contain,
                                 errorBuilder: (_, __, ___) => Icon(
                                   Icons.category_outlined,
                                   color: isSelected
                                       ? AppColors.primary
                                       : AppColors.grey,
+                                  size: 24,
                                 ),
                               )
                             else
@@ -206,49 +211,65 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
                                   );
                                 },
                                 child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Container(
-                                      width: 60,
-                                      height: 60,
-                                      padding: const EdgeInsets.all(12),
+                                      width: 64,
+                                      height: 64,
+                                      padding: const EdgeInsets.all(14),
                                       decoration: BoxDecoration(
-                                        color: Colors.grey[50],
+                                        color: Colors.white,
                                         shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(
+                                              0.03,
+                                            ),
+                                            blurRadius: 10,
+                                            spreadRadius: 0,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
                                         border: Border.all(
                                           color: Colors.grey[100]!,
+                                          width: 1,
                                         ),
                                       ),
-                                      child:
-                                          subcat.icon != null &&
-                                              subcat.icon!.isNotEmpty
-                                          ? Image.network(
-                                              subcat.icon!.startsWith('http')
-                                                  ? subcat.icon!
-                                                  : '${ApiConfig.baseUrl.replaceAll('/api', '')}${subcat.icon!.startsWith('/') ? '' : '/'}${subcat.icon!.replaceAll('\\', '/')}',
-                                              fit: BoxFit.contain,
-                                              errorBuilder: (_, __, ___) =>
-                                                  const Icon(
-                                                    Icons
-                                                        .subdirectory_arrow_right,
-                                                    color: AppColors.primary,
-                                                    size: 24,
-                                                  ),
-                                            )
-                                          : const Icon(
-                                              Icons.subdirectory_arrow_right,
-                                              color: AppColors.primary,
-                                              size: 24,
-                                            ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(30),
+                                        child:
+                                            subcat.icon != null &&
+                                                subcat.icon!.isNotEmpty
+                                            ? Image.network(
+                                                subcat.icon!.startsWith('http')
+                                                    ? subcat.icon!
+                                                    : '${ApiConfig.baseUrl.replaceAll('/api', '')}${subcat.icon!.startsWith('/') ? '' : '/'}${subcat.icon!.replaceAll('\\', '/')}',
+                                                fit: BoxFit.contain,
+                                                errorBuilder: (_, __, ___) =>
+                                                    const Icon(
+                                                      Icons.category_outlined,
+                                                      color: AppColors.primary,
+                                                      size: 22,
+                                                    ),
+                                              )
+                                            : const Icon(
+                                                Icons.category_outlined,
+                                                color: AppColors.primary,
+                                                size: 22,
+                                              ),
+                                      ),
                                     ),
-                                    const SizedBox(height: 8),
+                                    const SizedBox(height: 10),
                                     Text(
                                       subcat.name,
                                       textAlign: TextAlign.center,
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
-                                        fontSize: 10,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
                                         color: AppColors.darkText,
+                                        height: 1.2,
                                       ),
                                     ),
                                   ],
@@ -269,28 +290,36 @@ class _CategorySelectionScreenState extends State<CategorySelectionScreen> {
                                   );
                                 },
                                 child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Container(
+                                      width: 64,
+                                      height: 64,
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: Colors.grey[50],
+                                        color: AppColors.primary.withOpacity(
+                                          0.05,
+                                        ),
                                         shape: BoxShape.circle,
                                         border: Border.all(
-                                          color: Colors.grey[100]!,
+                                          color: AppColors.primary.withOpacity(
+                                            0.1,
+                                          ),
+                                          width: 1,
                                         ),
                                       ),
                                       child: const Icon(
-                                        Icons.chevron_right,
+                                        Icons.arrow_forward_rounded,
                                         color: AppColors.primary,
-                                        size: 24,
+                                        size: 26,
                                       ),
                                     ),
-                                    const SizedBox(height: 8),
+                                    const SizedBox(height: 10),
                                     const Text(
                                       'View All',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
-                                        fontSize: 10,
+                                        fontSize: 11,
                                         fontWeight: FontWeight.bold,
                                         color: AppColors.primary,
                                       ),

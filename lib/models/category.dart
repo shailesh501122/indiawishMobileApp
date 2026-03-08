@@ -31,6 +31,14 @@ class Category {
     this.filterConfig,
   });
 
+  String? get fullIconUrl {
+    if (icon == null || icon!.isEmpty) return null;
+    if (icon!.startsWith('http')) return icon;
+    // Assuming ApiConfig.baseUrl is available or will be handled in the widget
+    // For now, let's keep it as is or add a helper that takes baseUrl
+    return icon;
+  }
+
   factory Category.fromJson(Map<String, dynamic> json) {
     return Category(
       id: json['id'] ?? '',
