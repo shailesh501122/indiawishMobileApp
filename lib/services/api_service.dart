@@ -567,7 +567,8 @@ class ApiService {
     if (!sanitized.startsWith('/')) {
       sanitized = '/$sanitized';
     }
-
+    // Ensure ApiConfig.baseUrl handles '/api' correctly to get standard base URL
+    final base = (ApiConfig.baseUrl).replaceAll('/api', '');
     return '$base$sanitized';
   }
 
@@ -592,6 +593,10 @@ class ApiService {
             .map((json) => DiscoveryPlace.fromJson(json))
             .toList();
       }
+      return [];
+    } catch (e) {
+      debugPrint('Discovery error: $e');
+      return [];
     }
   }
 

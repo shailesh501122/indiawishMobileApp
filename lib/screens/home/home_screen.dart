@@ -628,6 +628,8 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       },
     );
+  }
+
   Widget _buildDiscoverySection() {
     final List<Map<String, String>> discoveryCategories = [
       {'id': 'tourist_attraction', 'name': 'Attractions', 'icon': 'map'},
