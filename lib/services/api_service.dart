@@ -650,9 +650,18 @@ class ApiService {
     try {
       final response = await _dio.get('/services/categories');
       if (response.statusCode == 200) {
-        return (response.data as List)
-            .map((json) => ServiceCategory.fromJson(json))
-            .toList();
+        return (response.data as List).map((json) {
+          final catJson = Map<String, dynamic>.from(json);
+          // Only normalize if it's an actual path (starts with / or http), otherwise leave as is,
+          // though usually custom icons from backend will be path strings. Let's normalize it
+          // but if it's a simple string like 'cleaning_services' it might get mangled.
+          // We'll normalize anything that contains '.' or '/' to avoid breaking seeded icons.
+          final iconStr = catJson['icon']?.toString() ?? '';
+          if (iconStr.contains('.') || iconStr.contains('/')) {
+            catJson['icon'] = _normalizeImageUrl(iconStr);
+          }
+          return ServiceCategory.fromJson(catJson);
+        }).toList();
       }
       return [];
     } catch (e) {

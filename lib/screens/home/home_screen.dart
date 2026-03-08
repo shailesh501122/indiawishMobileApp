@@ -13,6 +13,7 @@ import '../../providers/discovery_provider.dart';
 import '../../widgets/location_selector_modal.dart';
 import '../../widgets/discovery_card.dart';
 import '../services/services_list_screen.dart';
+import '../../providers/services_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -32,6 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
       provider.fetchRecentInteractions();
       context.read<ConfigProvider>().fetchConfigs();
       context.read<DiscoveryProvider>().fetchNearbyPlaces();
+      context.read<ServicesProvider>().fetchCategories();
       _determinePosition();
     });
   }
@@ -97,10 +99,12 @@ class _HomeScreenState extends State<HomeScreen> {
               color: const Color.fromARGB(255, 216, 71, 3),
               onRefresh: () async {
                 final provider = context.read<MarketplaceProvider>();
+                final servicesProv = context.read<ServicesProvider>();
                 await Future.wait([
                   provider.fetchCategories(),
                   provider.fetchFreshRecommendations(),
                   provider.fetchRecentInteractions(),
+                  servicesProv.fetchCategories(),
                 ]);
               },
               child: SingleChildScrollView(
@@ -435,112 +439,151 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHomeServicesSection() {
-    // Temporary static list of services to showcase the UI immediately.
-    // In the next step, this will be wired to a ServicesProvider.
-    final List<Map<String, dynamic>> services = [
-      {
-        'name': 'Housemaid',
-        'icon': Icons.cleaning_services,
-        'color': Colors.blue,
-      },
-      {'name': 'Cook/Chef', 'icon': Icons.soup_kitchen, 'color': Colors.orange},
-      {'name': 'Plumber', 'icon': Icons.plumbing, 'color': Colors.grey},
-      {
-        'name': 'Electrician',
-        'icon': Icons.electrical_services,
-        'color': Colors.amber,
-      },
-    ];
+    return Consumer<ServicesProvider>(
+      builder: (context, servicesProvider, child) {
+        if (servicesProvider.isLoading && servicesProvider.categories.isEmpty) {
+          return const SizedBox(
+            height: 100,
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
 
-    return Container(
-      color: AppColors.white,
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        final categories = servicesProvider.categories;
+        if (categories.isEmpty) return const SizedBox.shrink();
+
+        final colors = [
+          Colors.blue,
+          Colors.orange,
+          Colors.grey,
+          Colors.amber,
+          Colors.green,
+          Colors.purple,
+        ];
+
+        return Container(
+          color: AppColors.white,
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Home Services',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.darkText,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade50,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  'NEW',
-                  style: TextStyle(
-                    color: Colors.red.shade700,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Home Services',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.darkText,
+                    ),
                   ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      'NEW',
+                      style: TextStyle(
+                        color: Colors.red.shade700,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: List.generate(categories.length, (index) {
+                    final category = categories[index];
+                    final color = colors[index % colors.length];
+                    final bool hasImageIcon =
+                        category.icon != null &&
+                        category.icon!.startsWith('http');
+
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ServicesListScreen(
+                              categoryName: category.name,
+                              categoryId: category.id,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        width: 72,
+                        margin: const EdgeInsets.only(right: 16),
+                        child: Column(
+                          children: [
+                            Container(
+                              width: 60,
+                              height: 60,
+                              decoration: BoxDecoration(
+                                color: color.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: color.withOpacity(0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Center(
+                                child: hasImageIcon
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Image.network(
+                                          category.icon!,
+                                          width: 32,
+                                          height: 32,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (c, e, s) => Icon(
+                                            Icons.room_preferences,
+                                            color: color,
+                                            size: 28,
+                                          ),
+                                        ),
+                                      )
+                                    : Icon(
+                                        Icons.handyman,
+                                        color: color,
+                                        size: 28,
+                                      ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              category.name,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.darkText,
+                              ),
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: services.map((service) {
-              return GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ServicesListScreen(
-                        categoryName: service['name'],
-                        categoryId:
-                            null, // Would map to actual DB ID in a full implementation
-                      ),
-                    ),
-                  );
-                },
-                child: Column(
-                  children: [
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: service['color'].withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: service['color'].withOpacity(0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: Center(
-                        child: Icon(
-                          service['icon'],
-                          color: service['color'],
-                          size: 28,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      service['name'],
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.darkText,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
