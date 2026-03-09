@@ -54,92 +54,13 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   }
 
   void _initiateCall(bool isVideo) {
-    final currentUser = context.read<UserProvider>().currentUser;
-    final isElite = currentUser?.isElite ?? false;
+    // Removed Elite check as per production launch requirements
 
-    if (!isElite) {
-      showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Row(
-            children: [
-              Icon(
-                Icons.workspace_premium,
-                color: Colors.amber.shade700,
-                size: 28,
-              ),
-              const SizedBox(width: 8),
-              const Text('Elite Feature'),
-            ],
-          ),
-          content: const Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Audio & Video calls are available exclusively for Elite members.',
-                style: TextStyle(fontSize: 14),
-              ),
-              SizedBox(height: 12),
-              Text(
-                'Upgrade to Elite to unlock:',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-              ),
-              SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.green, size: 16),
-                  SizedBox(width: 8),
-                  Text('Direct voice & video calls'),
-                ],
-              ),
-              SizedBox(height: 4),
-              Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.green, size: 16),
-                  SizedBox(width: 8),
-                  Text('Priority listing visibility'),
-                ],
-              ),
-              SizedBox(height: 4),
-              Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.green, size: 16),
-                  SizedBox(width: 8),
-                  Text('Verified seller badge'),
-                ],
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Not Now'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                // TODO: Navigate to elite purchase screen
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                'Upgrade Now',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-      );
-      return;
-    }
+    // NEW: Send signal via provider
+    context.read<ChatProvider>().initiateCall(
+      widget.conversation.otherUser.id,
+      isVideo ? 'video_offer' : 'voice_offer',
+    );
 
     Navigator.push(
       context,

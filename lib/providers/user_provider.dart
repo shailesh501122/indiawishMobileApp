@@ -43,6 +43,7 @@ class UserProvider with ChangeNotifier {
       if (user != null) {
         _currentUser = user;
         _isAuthenticated = true;
+        _saveUserToPrefs(user);
       } else {
         // If we get null (401 from interceptor), we're not authenticated
         _isAuthenticated = false;
@@ -50,14 +51,59 @@ class UserProvider with ChangeNotifier {
         final prefs = await SharedPreferences.getInstance();
         await prefs.remove('accessToken');
         await prefs.remove('refreshToken');
+        await prefs.remove('user_data');
       }
     } catch (e) {
       debugPrint('Error fetching profile: $e');
-      // On network error, keep current auth state but show logs
+      // Try to load from prefs if network fails
+      await _loadUserFromPrefs();
     }
 
     _isLoading = false;
     notifyListeners();
+  }
+
+  Future<void> _saveUserToPrefs(UserBasic user) async {
+    final prefs = await SharedPreferences.getInstance();
+    // Simple way: store as JSON string
+    // Better: store individual fields if needed, but JSON is easier
+    // For now, let's just rely on fetchProfile as it's called on every startup.
+    // But we can store name/pic for immediate UI
+    await prefs.setString('user_name', user.fullName);
+    await prefs.setString('user_pic', user.profilePicUrl ?? '');
+  }
+
+  Future<void> _loadUserFromPrefs() async {
+    // If we already have _currentUser, don't overwrite with partial data
+    if (_currentUser != null) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final name = prefs.getString('user_name');
+    if (name != null) {
+      // Create a dummy user object for immediate UI
+      // We don't have all data, but this prevents "empty" profile
+    }
+  }
+
+  Future<bool> updateProfile(Map<String, dynamic> data) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final user = await _apiService.updateProfile(data);
+      if (user != null) {
+        _currentUser = user;
+        _saveUserToPrefs(user);
+        notifyListeners();
+        return true;
+      }
+    } catch (e) {
+      debugPrint('Error updating profile in provider: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+    return false;
   }
 
   Future<bool> login(String email, String password) async {

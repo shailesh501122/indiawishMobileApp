@@ -11,6 +11,7 @@ import '../chat/chat_detail_screen.dart';
 import 'seller_profile_screen.dart';
 import 'safe_deal_screen.dart';
 import '../../widgets/video_player_widget.dart';
+import '../chat/call_screen.dart';
 
 class ListingDetailScreen extends StatefulWidget {
   final Listing listing;
@@ -89,6 +90,23 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
+  }
+
+  void _initiateCall() {
+    if (widget.listing.owner == null) return;
+
+    context.read<ChatProvider>().initiateCall(
+      widget.listing.userId,
+      'voice_offer',
+    );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            CallScreen(otherUser: widget.listing.owner!, isVideoCall: false),
+      ),
+    );
   }
 
   @override
@@ -269,8 +287,13 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                           top: 40,
                                           right: 20,
                                           child: IconButton(
-                                            icon: const Icon(Icons.close, color: Colors.white, size: 30),
-                                            onPressed: () => Navigator.pop(context),
+                                            icon: const Icon(
+                                              Icons.close,
+                                              color: Colors.white,
+                                              size: 30,
+                                            ),
+                                            onPressed: () =>
+                                                Navigator.pop(context),
                                           ),
                                         ),
                                       ],
@@ -283,30 +306,39 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                 decoration: BoxDecoration(
                                   color: Colors.black.withOpacity(0.5),
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white, width: 2),
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 2,
+                                  ),
                                 ),
-                                child: const Icon(Icons.play_arrow, color: Colors.white, size: 40),
+                                child: const Icon(
+                                  Icons.play_arrow,
+                                  color: Colors.white,
+                                  size: 40,
+                                ),
                               ),
                             ),
                           ),
                         ),
                       if (widget.listing.videoUrl != null)
                         Positioned(
-                           top: 185,
-                           left: 0,
-                           right: 0,
-                           child: const Center(
-                             child: Text(
-                               'WATCH VIDEO',
-                               style: TextStyle(
-                                 color: Colors.white,
-                                 fontWeight: FontWeight.bold,
-                                 fontSize: 12,
-                                 letterSpacing: 1.2,
-                                 shadows: [Shadow(blurRadius: 10, color: Colors.black)],
-                               ),
-                             ),
-                           ),
+                          top: 185,
+                          left: 0,
+                          right: 0,
+                          child: const Center(
+                            child: Text(
+                              'WATCH VIDEO',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                                letterSpacing: 1.2,
+                                shadows: [
+                                  Shadow(blurRadius: 10, color: Colors.black),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
                     ],
                   ),
@@ -612,14 +644,17 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                   // Make Offer button
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: isOwner ? null : () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => SafeDealScreen(listing: widget.listing),
-                          ),
-                        );
-                      },
+                      onPressed: isOwner
+                          ? null
+                          : () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      SafeDealScreen(listing: widget.listing),
+                                ),
+                              );
+                            },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: isOwner
                             ? AppColors.grey
@@ -639,46 +674,49 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                   ),
                   const SizedBox(width: 8),
                   // Call button
-                  Opacity(
-                    opacity: isOwner ? 0.5 : 1.0,
-                    child: Container(
-                      width: 50,
-                      height: 46,
-                      decoration: BoxDecoration(
-                        color: AppColors.featured,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          const Icon(
-                            Icons.phone,
-                            color: AppColors.primary,
-                            size: 22,
-                          ),
-                          Positioned(
-                            top: 6,
-                            right: 6,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 3,
-                                vertical: 1,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.red,
-                                borderRadius: BorderRadius.circular(3),
-                              ),
-                              child: const Text(
-                                'New',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 7,
-                                  fontWeight: FontWeight.bold,
+                  GestureDetector(
+                    onTap: isOwner ? null : _initiateCall,
+                    child: Opacity(
+                      opacity: isOwner ? 0.5 : 1.0,
+                      child: Container(
+                        width: 50,
+                        height: 46,
+                        decoration: BoxDecoration(
+                          color: AppColors.featured,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            const Icon(
+                              Icons.phone,
+                              color: AppColors.primary,
+                              size: 22,
+                            ),
+                            Positioned(
+                              top: 6,
+                              right: 6,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 3,
+                                  vertical: 1,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  borderRadius: BorderRadius.circular(3),
+                                ),
+                                child: const Text(
+                                  'New',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 7,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),

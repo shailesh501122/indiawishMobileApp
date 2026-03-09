@@ -132,13 +132,16 @@ class ApiService {
     }
   }
 
-  Future<bool> updateProfile(Map<String, dynamic> data) async {
+  Future<UserBasic?> updateProfile(Map<String, dynamic> data) async {
     try {
       final response = await _dio.patch('/users/profile', data: data);
-      return response.statusCode == 200;
+      if (response.statusCode == 200) {
+        return UserBasic.fromJson(Map<String, dynamic>.from(response.data));
+      }
+      return null;
     } catch (e) {
       debugPrint('Error updating profile: $e');
-      return false;
+      return null;
     }
   }
 
@@ -205,6 +208,44 @@ class ApiService {
       return [];
     } catch (e) {
       debugPrint('Error fetching listings: $e');
+      return [];
+    }
+  }
+
+  Future<List<Listing>> getTrendingListings() async {
+    try {
+      final response = await _dio.get('/listings/home/trending');
+      if (response.statusCode == 200) {
+        final List data = response.data as List;
+        return data.map<Listing>((json) {
+          final listingJson = Map<String, dynamic>.from(json);
+          if (listingJson['images'] != null) {
+            listingJson['images'] = (listingJson['images'] as List)
+                .map((img) => _normalizeImageUrl(img.toString()))
+                .toList();
+          }
+          return Listing.fromJson(listingJson);
+        }).toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Error fetching trending listings: $e');
+      return [];
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> searchGlobal(String query) async {
+    try {
+      final response = await _dio.get(
+        '/listings/search/global',
+        queryParameters: {'query': query},
+      );
+      if (response.statusCode == 200) {
+        return List<Map<String, dynamic>>.from(response.data);
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Global search error: $e');
       return [];
     }
   }
@@ -571,6 +612,32 @@ class ApiService {
     }
   }
 
+  Future<bool> markAsRead(String conversationId) async {
+    try {
+      final response = await _dio.post('/chat/messages/$conversationId/read');
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint('Error marking messages as read: $e');
+      return false;
+    }
+  }
+
+  Future<void> sendCallSignal(
+    String otherUserId,
+    String type, [
+    Map<String, dynamic>? data,
+  ]) async {
+    try {
+      await _dio.post(
+        '/chat/call/signal',
+        queryParameters: {'other_user_id': otherUserId, 'signal_type': type},
+        data: data ?? {},
+      );
+    } catch (e) {
+      debugPrint('Error sending call signal: $e');
+    }
+  }
+
   String _normalizeImageUrl(String? url) {
     if (url == null || url.isEmpty || url == 'null') return '';
     if (url.startsWith('http')) return url;
@@ -695,6 +762,36 @@ class ApiService {
     }
   }
 
+  Future<List<ServiceProfile>> getTrendingServices() async {
+    try {
+      final response = await _dio.get('/services/home/trending');
+      if (response.statusCode == 200) {
+        return (response.data as List)
+            .map((json) => ServiceProfile.fromJson(json))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Error fetching trending services: $e');
+      return [];
+    }
+  }
+
+  Future<List<ServiceProfile>> getRecommendedServices() async {
+    try {
+      final response = await _dio.get('/services/home/recommended');
+      if (response.statusCode == 200) {
+        return (response.data as List)
+            .map((json) => ServiceProfile.fromJson(json))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Error fetching recommended services: $e');
+      return [];
+    }
+  }
+
   Future<ServiceBooking?> createServiceBooking(
     Map<String, dynamic> bookingData,
   ) async {
@@ -729,6 +826,43 @@ class ApiService {
     } catch (e) {
       debugPrint('Error fetching my service bookings: $e');
       return [];
+    }
+  }
+
+  // Calling
+  // sendCallSignal is already defined above
+
+  // Notifications
+  Future<List<dynamic>> getNotifications() async {
+    try {
+      final response = await _dio.get('/notifications/');
+      if (response.statusCode == 200) {
+        return response.data as List;
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Error fetching notifications: $e');
+      return [];
+    }
+  }
+
+  Future<bool> markNotificationAsRead(String notificationId) async {
+    try {
+      final response = await _dio.post('/notifications/$notificationId/read');
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint('Error marking notification as read: $e');
+      return false;
+    }
+  }
+
+  Future<bool> markAllNotificationsAsRead() async {
+    try {
+      final response = await _dio.post('/notifications/read-all');
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint('Error marking all as read: $e');
+      return false;
     }
   }
 }

@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../providers/search_provider.dart';
 import '../../core/constants.dart';
 import '../../providers/marketplace_provider.dart';
 import '../../widgets/listing_card.dart';
 import '../marketplace/listing_detail_screen.dart';
 import '../marketplace/category_selection_screen.dart';
-import '../../models/category.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import '../../providers/config_provider.dart';
 import '../../providers/discovery_provider.dart';
 import '../../widgets/location_selector_modal.dart';
-import '../../widgets/discovery_card.dart';
 import '../services/services_list_screen.dart';
 import '../../providers/services_provider.dart';
+import '../../providers/notification_provider.dart';
+import '../notifications/notification_history_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -38,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  String _currentAddress = 'DLF Phase 3, Gurgaon';
+  final TextEditingController _searchController = TextEditingController();
   bool _isFetchingLocation = false;
 
   Future<void> _determinePosition() async {
@@ -76,10 +77,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (placemarks.isNotEmpty) {
         Placemark place = placemarks[0];
-        setState(() {
-          _currentAddress = '${place.subLocality}, ${place.locality}';
-          _isFetchingLocation = false;
-        });
+        if (mounted) {
+          final address = '${place.subLocality}, ${place.locality}';
+          context.read<DiscoveryProvider>().setLocation(
+            position.latitude,
+            position.longitude,
+            address,
+          );
+        }
       }
     } catch (e) {
       debugPrint('Error getting location: $e');
@@ -91,39 +96,104 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Column(
+      body: Stack(
         children: [
-          _buildHeader(context),
-          Expanded(
-            child: RefreshIndicator(
-              color: const Color.fromARGB(255, 216, 71, 3),
-              onRefresh: () async {
-                final provider = context.read<MarketplaceProvider>();
-                final servicesProv = context.read<ServicesProvider>();
-                await Future.wait([
-                  provider.fetchCategories(),
-                  provider.fetchFreshRecommendations(),
-                  provider.fetchRecentInteractions(),
-                  servicesProv.fetchCategories(),
-                ]);
-              },
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildCategorySection(),
-                    _buildHomeServicesSection(),
-                    const SizedBox(height: 16),
-                    _buildEliteBuyerBanner(),
-
-                    _buildRecentInteractionsSection(context),
-                    _buildFreshRecommendations(context),
-                    const SizedBox(height: 80),
-                  ],
+          Column(
+            children: [
+              _buildHeader(context),
+              Expanded(
+                child: RefreshIndicator(
+                  color: const Color.fromARGB(255, 216, 71, 3),
+                  onRefresh: () async {
+                    final provider = context.read<MarketplaceProvider>();
+                    final servicesProv = context.read<ServicesProvider>();
+                    await Future.wait([
+                      provider.fetchCategories(),
+                      provider.fetchFreshRecommendations(),
+                      provider.fetchRecentInteractions(),
+                      servicesProv.fetchCategories(),
+                    ]);
+                  },
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildCategorySection(),
+                        _buildHomeServicesSection(),
+                        const SizedBox(height: 16),
+                        _buildRecentInteractionsSection(context),
+                        _buildFreshRecommendations(context),
+                        const SizedBox(height: 80),
+                      ],
+                    ),
+                  ),
                 ),
               ),
-            ),
+            ],
+          ),
+          // Search Suggestions Overlay
+          Consumer<SearchProvider>(
+            builder: (context, searchProv, child) {
+              if (searchProv.suggestions.isEmpty)
+                return const SizedBox.shrink();
+
+              return Positioned(
+                top:
+                    MediaQuery.of(context).padding.top +
+                    104, // Height of SAFE AREA + Header
+                left: 12,
+                right: 12,
+                bottom: 20, // Leave some space at bottom
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: ListView.separated(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: searchProv.suggestions.length,
+                    separatorBuilder: (context, index) =>
+                        const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final item = searchProv.suggestions[index];
+                      return ListTile(
+                        leading: _getSearchIcon(item['type']),
+                        title: Text(
+                          item['title'],
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        subtitle: Text(
+                          item['category_name'] ?? item['type'],
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                        trailing: const Icon(
+                          Icons.arrow_outward,
+                          size: 14,
+                          color: Colors.grey,
+                        ),
+                        onTap: () {
+                          // TODO: Navigate to detail
+                          searchProv.clearSearch();
+                          _searchController.clear();
+                        },
+                      );
+                    },
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -225,7 +295,57 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                     ),
                   ),
-                  // Notifications icon removed as requested
+                  // Notifications icon
+                  Consumer<NotificationProvider>(
+                    builder: (context, notificationProv, child) {
+                      final unread = notificationProv.unreadCount;
+                      return Stack(
+                        children: [
+                          IconButton(
+                            icon: const Icon(
+                              Icons.notifications_none_rounded,
+                              color: darkBlue,
+                              size: 26,
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const NotificationHistoryScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                          if (unread > 0)
+                            Positioned(
+                              right: 8,
+                              top: 8,
+                              child: Container(
+                                padding: const EdgeInsets.all(2),
+                                decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                constraints: const BoxConstraints(
+                                  minWidth: 16,
+                                  minHeight: 16,
+                                ),
+                                child: Text(
+                                  unread > 9 ? '9+' : unread.toString(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
@@ -248,6 +368,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Consumer<ConfigProvider>(
                         builder: (context, config, child) {
                           return TextField(
+                            controller: _searchController,
+                            onChanged: (value) {
+                              context.read<SearchProvider>().updateSuggestions(
+                                value,
+                              );
+                            },
                             decoration: InputDecoration(
                               hintText: config.get(
                                 'search_hint',
@@ -506,9 +632,46 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: List.generate(categories.length, (index) {
                     final category = categories[index];
                     final color = colors[index % colors.length];
-                    final bool hasImageIcon =
-                        category.icon != null &&
-                        category.icon!.startsWith('http');
+
+                    // Improved icon handling
+                    Widget iconWidget;
+                    String? iconStr = category.icon;
+
+                    if (iconStr != null &&
+                        (iconStr.startsWith('http') ||
+                            iconStr.startsWith('/uploads'))) {
+                      String imageUrl = iconStr.startsWith('http')
+                          ? iconStr
+                          : '${ApiConfig.baseUrl.replaceFirst('/api', '')}$iconStr';
+
+                      iconWidget = ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          imageUrl,
+                          width: 32,
+                          height: 32,
+                          fit: BoxFit.cover,
+                          errorBuilder: (c, e, s) => Icon(
+                            Icons.room_preferences,
+                            color: color,
+                            size: 28,
+                          ),
+                        ),
+                      );
+                    } else {
+                      // Handle Material icon names (seeded data)
+                      IconData iconData = Icons.handyman; // Default
+                      if (iconStr == 'cleaning_services')
+                        iconData = Icons.cleaning_services;
+                      else if (iconStr == 'soup_kitchen')
+                        iconData = Icons.soup_kitchen;
+                      else if (iconStr == 'plumbing')
+                        iconData = Icons.plumbing;
+                      else if (iconStr == 'electrical_services')
+                        iconData = Icons.electrical_services;
+
+                      iconWidget = Icon(iconData, color: color, size: 28);
+                    }
 
                     return GestureDetector(
                       onTap: () {
@@ -538,28 +701,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   width: 1,
                                 ),
                               ),
-                              child: Center(
-                                child: hasImageIcon
-                                    ? ClipRRect(
-                                        borderRadius: BorderRadius.circular(8),
-                                        child: Image.network(
-                                          category.icon!,
-                                          width: 32,
-                                          height: 32,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (c, e, s) => Icon(
-                                            Icons.room_preferences,
-                                            color: color,
-                                            size: 28,
-                                          ),
-                                        ),
-                                      )
-                                    : Icon(
-                                        Icons.handyman,
-                                        color: color,
-                                        size: 28,
-                                      ),
-                              ),
+                              child: Center(child: iconWidget),
                             ),
                             const SizedBox(height: 8),
                             Text(
@@ -587,86 +729,22 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildEliteBuyerBanner() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE8EEF6),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: AppColors.lightGrey, width: 0.5),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: AppColors.lightGrey),
-            ),
-            child: const Column(
-              children: [
-                Icon(
-                  Icons.workspace_premium,
-                  color: AppColors.primary,
-                  size: 20,
-                ),
-                Text(
-                  'ELITE\nBUYER',
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 7,
-                    fontWeight: FontWeight.bold,
-                    height: 1.2,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Become an Elite Buyer',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                    color: AppColors.darkText,
-                  ),
-                ),
-                Text(
-                  'Call Owners Directly',
-                  style: TextStyle(fontSize: 12, color: AppColors.grey),
-                ),
-              ],
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              minimumSize: const Size(80, 36),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-            ),
-            child: const Text(
-              'Buy Now',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 13,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  // Removed _buildEliteBuyerBanner as requested
+
+  Widget _getSearchIcon(String type) {
+    switch (type) {
+      case 'listing':
+        return const Icon(
+          Icons.shopping_bag_outlined,
+          color: AppColors.primary,
+        );
+      case 'service':
+        return const Icon(Icons.handyman_outlined, color: Colors.orange);
+      case 'category':
+        return const Icon(Icons.category_outlined, color: Colors.blue);
+      default:
+        return const Icon(Icons.search, color: Colors.grey);
+    }
   }
 
   Widget _buildRecentInteractionsSection(BuildContext context) {
@@ -689,7 +767,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             SizedBox(
-              height: 200,
+              height: 220, // Increased from 200 to fix 15px overflow
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 8),

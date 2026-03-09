@@ -7,6 +7,7 @@ class Conversation {
   final String? listingId;
   final String? propertyId;
   final String? lastMessage;
+  final int unreadCount;
   final DateTime updatedAt;
   final UserBasic otherUser;
 
@@ -17,6 +18,7 @@ class Conversation {
     this.listingId,
     this.propertyId,
     this.lastMessage,
+    this.unreadCount = 0,
     required this.updatedAt,
     required this.otherUser,
   });
@@ -29,6 +31,7 @@ class Conversation {
       listingId: json['listing_id'],
       propertyId: json['property_id'],
       lastMessage: json['last_message'],
+      unreadCount: json['unread_count'] ?? 0,
       updatedAt: json['updated_at'] != null
           ? DateTime.parse(json['updated_at'])
           : DateTime.now(),

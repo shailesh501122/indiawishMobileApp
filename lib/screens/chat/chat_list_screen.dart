@@ -265,7 +265,21 @@ class _ChatListScreenState extends State<ChatListScreen>
           return const Center(child: CircularProgressIndicator());
         }
 
-        if (provider.conversations.isEmpty) {
+        var filteredConversations = provider.conversations;
+        if (_activeFilter == 'Unread') {
+          filteredConversations = filteredConversations
+              .where((c) => c.unreadCount > 0)
+              .toList();
+        } else if (_activeFilter == 'Elite Buyer') {
+          filteredConversations = filteredConversations
+              .where((c) => c.otherUser.isElite)
+              .toList();
+        } else if (_activeFilter == 'Important') {
+          // You could add logic here for important flag if available
+          // For now, let's just show all
+        }
+
+        if (filteredConversations.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -276,9 +290,11 @@ class _ChatListScreenState extends State<ChatListScreen>
                   color: AppColors.lightGrey,
                 ),
                 const SizedBox(height: 16),
-                const Text(
-                  'No messages yet',
-                  style: TextStyle(color: AppColors.grey, fontSize: 16),
+                Text(
+                  _activeFilter == 'All'
+                      ? 'No messages yet'
+                      : 'No $_activeFilter chats found',
+                  style: const TextStyle(color: AppColors.grey, fontSize: 16),
                 ),
                 const SizedBox(height: 8),
                 TextButton(
@@ -293,14 +309,14 @@ class _ChatListScreenState extends State<ChatListScreen>
         return RefreshIndicator(
           onRefresh: provider.fetchConversations,
           child: ListView.separated(
-            itemCount: provider.conversations.length,
+            itemCount: filteredConversations.length,
             separatorBuilder: (context, index) => const Divider(
               height: 1,
               indent: 72,
               color: AppColors.lightGrey,
             ),
             itemBuilder: (context, index) {
-              final conv = provider.conversations[index];
+              final conv = filteredConversations[index];
               return _buildChatItem(context, conv);
             },
           ),
@@ -431,17 +447,49 @@ class _ChatListScreenState extends State<ChatListScreen>
                           : FontWeight.normal,
                     ),
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    conv.lastMessage ?? 'Start a conversation',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: AppColors.grey, fontSize: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          conv.lastMessage ?? 'Start a conversation',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: conv.unreadCount > 0
+                                ? AppColors.darkText
+                                : AppColors.grey,
+                            fontSize: 12,
+                            fontWeight: conv.unreadCount > 0
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                      if (conv.unreadCount > 0)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            '${conv.unreadCount}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 8),
             const Icon(Icons.more_vert, color: AppColors.grey, size: 18),
           ],
         ),

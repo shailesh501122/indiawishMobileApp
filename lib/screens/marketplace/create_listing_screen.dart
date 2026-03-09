@@ -28,6 +28,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
   String? _location;
   List<SubCategory> _currentSubcategories = [];
 
+  final Map<String, dynamic> _dynamicProperties = {};
   final List<XFile> _selectedImages = [];
   final ImagePicker _picker = ImagePicker();
 
@@ -40,8 +41,6 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
   Map<String, dynamic>? _priceSuggestion;
   bool _loadingSuggestion = false;
   final _apiService = ApiService();
-  File? _videoFile;
-  bool _isUploadingVideo = false;
 
   @override
   void initState() {
@@ -125,24 +124,6 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
     setState(() {
       _selectedImages.removeAt(index);
     });
-  }
-
-  Future<void> _pickVideo() async {
-    try {
-      final XFile? video = await _picker.pickVideo(
-        source: ImageSource.gallery,
-        maxDuration: const Duration(seconds: 30),
-      );
-      if (video != null) {
-        setState(() => _videoFile = File(video.path));
-      }
-    } catch (e) {
-      debugPrint('Error picking video: $e');
-    }
-  }
-
-  void _removeVideo() {
-    setState(() => _videoFile = null);
   }
 
   @override
@@ -300,92 +281,6 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
 
                   const SizedBox(height: 8),
 
-                  // Video section
-                  Container(
-                    color: AppColors.white,
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Add Video (Max 30s)',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            color: AppColors.darkText,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        if (_videoFile == null)
-                          GestureDetector(
-                            onTap: _pickVideo,
-                            child: Container(
-                              height: 100,
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                color: AppColors.background,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: AppColors.primary.withOpacity(0.3),
-                                  width: 1.5,
-                                  style: BorderStyle.solid,
-                                ),
-                              ),
-                              child: const Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.video_call_outlined, color: AppColors.primary, size: 30),
-                                  SizedBox(height: 4),
-                                  Text(
-                                    'Select Video Ad',
-                                    style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          )
-                        else
-                          Stack(
-                            children: [
-                              Container(
-                                height: 100,
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  color: Colors.black87,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: const Center(
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(Icons.videocam, color: Colors.white),
-                                      SizedBox(width: 8),
-                                      Text('Video Selected', style: TextStyle(color: Colors.white)),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              Positioned(
-                                top: 8,
-                                right: 8,
-                                child: GestureDetector(
-                                  onTap: _removeVideo,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: const BoxDecoration(
-                                      color: Colors.black54,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(Icons.close, color: Colors.white, size: 16),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                      ],
-                    ),
-                  ),
-
                   const SizedBox(height: 8),
 
                   // Form fields
@@ -447,7 +342,7 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                           ),
                           const SizedBox(height: 16),
                           // ── Price fields: sell price or rent price ────
-                          if (_listingType == 'sell') ...[                          
+                          if (_listingType == 'sell') ...[
                             TextFormField(
                               controller: _priceController,
                               decoration: const InputDecoration(
@@ -465,28 +360,42 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                               },
                             ),
                             // 🤖 AI Price Suggestion Banner
-                            if (_priceSuggestion != null && (_priceSuggestion!['similar_count'] ?? 0) > 0)
+                            if (_priceSuggestion != null &&
+                                (_priceSuggestion!['similar_count'] ?? 0) > 0)
                               GestureDetector(
                                 onTap: () {
-                                  _priceController.text = '${_priceSuggestion!['recommended_price']}';
+                                  _priceController.text =
+                                      '${_priceSuggestion!['recommended_price']}';
                                   setState(() {});
                                 },
                                 child: Container(
                                   margin: const EdgeInsets.only(top: 8),
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: Colors.blue.shade50,
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: Colors.blue.shade200),
+                                    border: Border.all(
+                                      color: Colors.blue.shade200,
+                                    ),
                                   ),
                                   child: Row(
                                     children: [
-                                      const Icon(Icons.lightbulb_outline, color: Colors.blue, size: 18),
+                                      const Icon(
+                                        Icons.lightbulb_outline,
+                                        color: Colors.blue,
+                                        size: 18,
+                                      ),
                                       const SizedBox(width: 8),
                                       Expanded(
                                         child: Text(
                                           'Similar items sell for ₹${_priceSuggestion!['min_price']} – ₹${_priceSuggestion!['max_price']}. Tap to use ₹${_priceSuggestion!['recommended_price']}',
-                                          style: const TextStyle(color: Colors.blue, fontSize: 12),
+                                          style: const TextStyle(
+                                            color: Colors.blue,
+                                            fontSize: 12,
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -498,13 +407,26 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                                 padding: EdgeInsets.only(top: 8),
                                 child: Row(
                                   children: [
-                                    SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)),
+                                    SizedBox(
+                                      width: 14,
+                                      height: 14,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
                                     SizedBox(width: 8),
-                                    Text('Fetching price suggestion...', style: TextStyle(fontSize: 12, color: AppColors.grey)),
+                                    Text(
+                                      'Fetching price suggestion...',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: AppColors.grey,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
-                          ] else ...[  // listing_type == 'rent'
+                          ] else ...[
+                            // listing_type == 'rent'
                             TextFormField(
                               controller: _rentPriceController,
                               decoration: const InputDecoration(
@@ -515,7 +437,8 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                               ),
                               keyboardType: TextInputType.number,
                               validator: (value) {
-                                if (_listingType == 'rent' && (value == null || value.isEmpty))
+                                if (_listingType == 'rent' &&
+                                    (value == null || value.isEmpty))
                                   return 'Please enter rent price';
                                 return null;
                               },
@@ -523,13 +446,27 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                             const SizedBox(height: 12),
                             DropdownButtonFormField<String>(
                               value: _rentPeriod,
-                              decoration: const InputDecoration(labelText: 'Rent Period'),
+                              decoration: const InputDecoration(
+                                labelText: 'Rent Period',
+                              ),
                               items: const [
-                                DropdownMenuItem(value: 'daily', child: Text('Per Day')),
-                                DropdownMenuItem(value: 'weekly', child: Text('Per Week')),
-                                DropdownMenuItem(value: 'monthly', child: Text('Per Month')),
+                                DropdownMenuItem(
+                                  value: 'daily',
+                                  child: Text('Per Day'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'weekly',
+                                  child: Text('Per Week'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'monthly',
+                                  child: Text('Per Month'),
+                                ),
                               ],
-                              onChanged: (val) { if (val != null) setState(() => _rentPeriod = val); },
+                              onChanged: (val) {
+                                if (val != null)
+                                  setState(() => _rentPeriod = val);
+                              },
                             ),
                             // Also need a listing price (deposit or reference)
                             const SizedBox(height: 12),
@@ -542,8 +479,10 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                               ),
                               keyboardType: TextInputType.number,
                               validator: (value) {
-                                if (value == null || value.isEmpty) return 'Enter deposit amount';
-                                if (double.tryParse(value) == null) return 'Enter a valid number';
+                                if (value == null || value.isEmpty)
+                                  return 'Enter deposit amount';
+                                if (double.tryParse(value) == null)
+                                  return 'Enter a valid number';
                                 return null;
                               },
                             ),
@@ -562,15 +501,18 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                                     child: Text(cat.name),
                                   );
                                 }).toList(),
-                                validator: (value) =>
-                                    value == null ? 'Please select a category' : null,
+                                validator: (value) => value == null
+                                    ? 'Please select a category'
+                                    : null,
                                 onChanged: (val) {
                                   if (val != null) {
                                     setState(() {
                                       _selectedCategory = val;
                                       _selectedSubcategory = null;
-                                      final cat = provider.categories.firstWhere((c) => c.id == val);
-                                      _currentSubcategories = cat.subcategories ?? [];
+                                      final cat = provider.categories
+                                          .firstWhere((c) => c.id == val);
+                                      _currentSubcategories =
+                                          cat.subcategories ?? [];
                                     });
                                     _fetchPriceSuggestion();
                                   }
@@ -578,6 +520,87 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
                               );
                             },
                           ),
+                          if (_selectedCategory != null)
+                            Consumer<MarketplaceProvider>(
+                              builder: (context, provider, child) {
+                                final cat = provider.categories.firstWhere(
+                                  (c) => c.id == _selectedCategory,
+                                );
+                                if (cat.filterConfig == null ||
+                                    cat.filterConfig!.isEmpty) {
+                                  return const SizedBox.shrink();
+                                }
+
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const SizedBox(height: 16),
+                                    const Text(
+                                      'Additional Information',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                        color: AppColors.darkText,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    ...cat.filterConfig!.map((config) {
+                                      final key =
+                                          config['key'] ?? config['name'];
+                                      final label = config['name'] ?? key;
+                                      final type = config['type'] ?? 'text';
+                                      final options =
+                                          config['options'] as List?;
+
+                                      return Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 12,
+                                        ),
+                                        child: options != null
+                                            ? DropdownButtonFormField<String>(
+                                                value: _dynamicProperties[key],
+                                                decoration: InputDecoration(
+                                                  labelText: label,
+                                                ),
+                                                items: options.map((opt) {
+                                                  return DropdownMenuItem(
+                                                    value: opt.toString(),
+                                                    child: Text(opt.toString()),
+                                                  );
+                                                }).toList(),
+                                                onChanged: (val) {
+                                                  setState(
+                                                    () =>
+                                                        _dynamicProperties[key] =
+                                                            val,
+                                                  );
+                                                },
+                                              )
+                                            : TextFormField(
+                                                initialValue:
+                                                    _dynamicProperties[key]
+                                                        ?.toString(),
+                                                decoration: InputDecoration(
+                                                  labelText: label,
+                                                  hintText: 'Enter $label',
+                                                ),
+                                                keyboardType: type == 'number'
+                                                    ? TextInputType.number
+                                                    : TextInputType.text,
+                                                onChanged: (val) {
+                                                  setState(
+                                                    () =>
+                                                        _dynamicProperties[key] =
+                                                            val,
+                                                  );
+                                                },
+                                              ),
+                                      );
+                                    }).toList(),
+                                  ],
+                                );
+                              },
+                            ),
                           if (_currentSubcategories.isNotEmpty) ...[
                             const SizedBox(height: 16),
                             DropdownButtonFormField<String>(
@@ -656,13 +679,6 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
 
       if (imageUrls.isEmpty) throw Exception('Failed to upload images');
 
-      String? videoUrl;
-      if (_videoFile != null) {
-        setState(() => _isUploadingVideo = true);
-        videoUrl = await provider.uploadVideo(_videoFile!);
-        setState(() => _isUploadingVideo = false);
-      }
-
       final success = await provider.postListing({
         'title': _titleController.text,
         'description': _descriptionController.text,
@@ -672,9 +688,10 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
         'location': _location,
         'images': imageUrls,
         'listing_type': _listingType,
-        if (_listingType == 'rent') 'rent_price': double.tryParse(_rentPriceController.text) ?? 0,
+        'properties': _dynamicProperties,
+        if (_listingType == 'rent')
+          'rent_price': double.tryParse(_rentPriceController.text) ?? 0,
         if (_listingType == 'rent') 'rent_period': _rentPeriod,
-        if (videoUrl != null) 'video_url': videoUrl,
       });
 
       if (mounted) {
@@ -742,11 +759,18 @@ class _CreateListingScreenState extends State<CreateListingScreen> {
   /// Fetches AI price suggestion when category is selected
   Future<void> _fetchPriceSuggestion() async {
     if (_selectedCategory == null) return;
-    setState(() { _loadingSuggestion = true; _priceSuggestion = null; });
+    setState(() {
+      _loadingSuggestion = true;
+      _priceSuggestion = null;
+    });
     final result = await _apiService.suggestPrice(
       categoryId: _selectedCategory!,
       subcategoryId: _selectedSubcategory,
     );
-    if (mounted) setState(() { _priceSuggestion = result; _loadingSuggestion = false; });
+    if (mounted)
+      setState(() {
+        _priceSuggestion = result;
+        _loadingSuggestion = false;
+      });
   }
 }

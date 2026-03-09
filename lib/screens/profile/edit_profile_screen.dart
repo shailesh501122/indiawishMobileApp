@@ -75,15 +75,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     setState(() => _isSaving = true);
     try {
-      final api = ApiService();
-      final result = await api.updateProfile({
+      final provider = context.read<UserProvider>();
+      final result = await provider.updateProfile({
         'firstName': _firstNameCtrl.text.trim(),
         'lastName': _lastNameCtrl.text.trim(),
         'phoneNumber': _phoneCtrl.text.trim(),
         if (_profilePicUrl != null) 'profilePicUrl': _profilePicUrl,
       });
       if (result && mounted) {
-        await context.read<UserProvider>().fetchProfile();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Profile updated successfully!'),

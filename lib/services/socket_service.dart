@@ -95,6 +95,12 @@ class SocketService {
       }
     });
 
+    socket.on('messages_read', (data) {
+      if (data != null) {
+        // Handled in provider via socket.on
+      }
+    });
+
     socket.onDisconnect((_) => debugPrint('Disconnected from socket server'));
     socket.onConnectError((err) => debugPrint('Socket Connection Error: $err'));
   }

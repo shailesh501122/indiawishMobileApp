@@ -63,4 +63,11 @@ class NotificationService {
 
     await _plugin.show(id, title, body, details, payload: payload);
   }
+
+  Future<void> cancelNotificationsForConversation(String conversationId) async {
+    if (kIsWeb) return;
+    // We use a simple hash of the conversationId as the notification ID
+    final int id = conversationId.hashCode;
+    await _plugin.cancel(id);
+  }
 }

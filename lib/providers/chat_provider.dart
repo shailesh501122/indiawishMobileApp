@@ -22,6 +22,11 @@ class ChatProvider with ChangeNotifier {
     _socketService.addMessageListener((msg) {
       handleNewMessage(msg);
     });
+    _socketService.socket.on('messages_read', (data) {
+      if (data != null) {
+        handleMessagesRead(data['conversation_id']);
+      }
+    });
   }
 
   Future<void> fetchConversations() async {
@@ -53,6 +58,8 @@ class ChatProvider with ChangeNotifier {
         notifyListeners();
       }
       _socketService.joinConversation(conversationId);
+      // Mark as read when entering chat
+      markAsRead(conversationId);
     } catch (e) {
       debugPrint('Error in ChatProvider.fetchMessages: $e');
     }
@@ -84,8 +91,9 @@ class ChatProvider with ChangeNotifier {
     if (!_messages[msg.conversationId]!.any((m) => m.id == msg.id)) {
       _messages[msg.conversationId]!.add(msg);
 
-      // Show notification
+      // Show notification using conversation hash as ID
       NotificationService().showNotification(
+        id: msg.conversationId.hashCode,
         title: 'New Message',
         body: msg.content,
         payload: msg.conversationId,
@@ -115,5 +123,52 @@ class ChatProvider with ChangeNotifier {
       notifyListeners();
     }
     return conv;
+  }
+
+  Future<void> markAsRead(String conversationId) async {
+    final success = await _apiService.markAsRead(conversationId);
+    if (success) {
+      final index = _conversations.indexWhere((c) => c.id == conversationId);
+      if (index != -1) {
+        // We can't actually change the model field because it's final,
+        // but we can refetch or just clear locally if we had a non-final version.
+        // For now, let's just trigger a refetch of conversations to get accurate counts.
+        fetchConversations();
+      }
+    }
+  }
+
+  Future<void> initiateCall(String otherUserId, String type) async {
+    await _apiService.sendCallSignal(otherUserId, type);
+  }
+
+  void handleMessagesRead(String conversationId) {
+    if (_messages.containsKey(conversationId)) {
+      for (var i = 0; i < _messages[conversationId]!.length; i++) {
+        final msg = _messages[conversationId]![i];
+        if (!msg.isRead) {
+          // Update the message read status. Since it's final we recreate.
+          _messages[conversationId]![i] = ChatMessage(
+            id: msg.id,
+            conversationId: msg.conversationId,
+            senderId: msg.senderId,
+            content: msg.content,
+            createdAt: msg.createdAt,
+            isRead: true,
+          );
+        }
+      }
+      notifyListeners();
+    }
+
+    // Update conversation unread count
+    final index = _conversations.indexWhere((c) => c.id == conversationId);
+    if (index != -1) {
+      // Mark local count as 0
+      fetchConversations(); // Simpler than recreating the model object if final
+    }
+
+    // Cancel notification if any
+    NotificationService().cancelNotificationsForConversation(conversationId);
   }
 }
