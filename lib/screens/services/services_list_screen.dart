@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import '../../core/constants.dart';
 import '../../providers/services_provider.dart';
 import '../../models/service_profile.dart';
+import '../../models/service_category.dart';
 import 'service_booking_screen.dart';
+import 'post_lead_screen.dart';
 
 class ServicesListScreen extends StatefulWidget {
   final String categoryName;
@@ -24,7 +26,9 @@ class _ServicesListScreenState extends State<ServicesListScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ServicesProvider>().searchProfiles(categoryId: widget.categoryId);
+      context.read<ServicesProvider>().searchProfiles(
+        categoryId: widget.categoryId,
+      );
     });
   }
 
@@ -47,7 +51,9 @@ class _ServicesListScreenState extends State<ServicesListScreen> {
       body: Consumer<ServicesProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+            return const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            );
           }
 
           if (provider.searchedProfiles.isEmpty) {
@@ -69,6 +75,29 @@ class _ServicesListScreenState extends State<ServicesListScreen> {
           );
         },
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          if (widget.categoryId == null) return;
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PostLeadScreen(
+                category: ServiceCategory(
+                  id: widget.categoryId!,
+                  name: widget.categoryName,
+                  icon: '',
+                ),
+              ),
+            ),
+          );
+        },
+        backgroundColor: AppColors.primary,
+        icon: const Icon(Icons.bolt, color: Colors.white),
+        label: const Text(
+          'Fast Request',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+      ),
     );
   }
 
@@ -77,7 +106,11 @@ class _ServicesListScreenState extends State<ServicesListScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.person_search, size: 80, color: AppColors.grey.withOpacity(0.5)),
+          Icon(
+            Icons.person_search,
+            size: 80,
+            color: AppColors.grey.withOpacity(0.5),
+          ),
           const SizedBox(height: 16),
           Text(
             'No professionals found found for \${widget.categoryName}',
@@ -90,16 +123,17 @@ class _ServicesListScreenState extends State<ServicesListScreen> {
           const SizedBox(height: 8),
           const Text(
             'Please try a different area or check back later.',
-            style: TextStyle(
-              color: AppColors.grey,
-            ),
+            style: TextStyle(color: AppColors.grey),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildServiceProfileCard(BuildContext context, ServiceProfile profile) {
+  Widget _buildServiceProfileCard(
+    BuildContext context,
+    ServiceProfile profile,
+  ) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
@@ -131,11 +165,15 @@ class _ServicesListScreenState extends State<ServicesListScreen> {
                         ? NetworkImage(profile.images.first)
                         : null,
                     child: profile.images.isEmpty
-                        ? const Icon(Icons.person, color: AppColors.grey, size: 30)
+                        ? const Icon(
+                            Icons.person,
+                            color: AppColors.grey,
+                            size: 30,
+                          )
                         : null,
                   ),
                   const SizedBox(width: 16),
-                  
+
                   // Details
                   Expanded(
                     child: Column(
@@ -157,14 +195,22 @@ class _ServicesListScreenState extends State<ServicesListScreen> {
                             ),
                             if (profile.isVerified) ...[
                               const SizedBox(width: 4),
-                              const Icon(Icons.verified, color: Colors.blue, size: 16),
+                              const Icon(
+                                Icons.verified,
+                                color: Colors.blue,
+                                size: 16,
+                              ),
                             ],
                           ],
                         ),
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            const Icon(Icons.star, color: Colors.amber, size: 16),
+                            const Icon(
+                              Icons.star,
+                              color: Colors.amber,
+                              size: 16,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               '\${profile.rating.toStringAsFixed(1)} (\${profile.totalReviews} reviews)',
@@ -220,7 +266,8 @@ class _ServicesListScreenState extends State<ServicesListScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => ServiceBookingScreen(profile: profile),
+                          builder: (context) =>
+                              ServiceBookingScreen(profile: profile),
                         ),
                       );
                     },
@@ -237,9 +284,9 @@ class _ServicesListScreenState extends State<ServicesListScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                  )
+                  ),
                 ],
-              )
+              ),
             ],
           ),
         ),

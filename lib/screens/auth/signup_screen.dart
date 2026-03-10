@@ -17,6 +17,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _referralController = TextEditingController();
 
   void _handleSignup() async {
     if (!_formKey.currentState!.validate()) return;
@@ -28,6 +29,7 @@ class _SignupScreenState extends State<SignupScreen> {
       'email': _emailController.text.trim(),
       'password': _passwordController.text.trim(),
       'phoneNumber': _phoneController.text.trim(),
+      'referralCode': _referralController.text.trim(),
     });
 
     if (success && mounted) {
@@ -180,6 +182,14 @@ class _SignupScreenState extends State<SignupScreen> {
                               validator: (v) => v!.length < 6
                                   ? 'Password min 6 symbols'
                                   : null,
+                            ),
+                            const SizedBox(height: 20),
+
+                            _buildTextFormField(
+                              controller: _referralController,
+                              label: 'Referral Code (Optional)',
+                              icon: Icons.card_giftcard,
+                              keyboardType: TextInputType.text,
                             ),
 
                             const SizedBox(height: 40),

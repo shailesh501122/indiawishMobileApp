@@ -12,6 +12,7 @@ import 'seller_profile_screen.dart';
 import 'safe_deal_screen.dart';
 import '../../widgets/video_player_widget.dart';
 import '../chat/call_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ListingDetailScreen extends StatefulWidget {
   final Listing listing;
@@ -107,6 +108,52 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
             CallScreen(otherUser: widget.listing.owner!, isVideoCall: false),
       ),
     );
+  }
+
+  Future<void> _openWhatsApp() async {
+    final phone = widget.listing.owner?.phoneNumber;
+    if (phone == null || phone.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Seller has not provided a phone number.'),
+          ),
+        );
+      }
+      return;
+    }
+
+    final message =
+        "Hello, I found your listing '${widget.listing.title}' on IndiaWish and I am interested. Is it still available?";
+    final cleanPhone = phone.replaceAll(RegExp(r'[^\d+]'), '');
+    final url = Uri.parse(
+      "whatsapp://send?phone=$cleanPhone&text=${Uri.encodeComponent(message)}",
+    );
+
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url);
+      } else {
+        final webUrl = Uri.parse(
+          "https://wa.me/$cleanPhone?text=${Uri.encodeComponent(message)}",
+        );
+        if (await canLaunchUrl(webUrl)) {
+          await launchUrl(webUrl, mode: LaunchMode.externalApplication);
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Could not open WhatsApp.')),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
   }
 
   @override
@@ -573,6 +620,39 @@ class _ListingDetailScreenState extends State<ListingDetailScreen> {
                                   color: AppColors.grey,
                                 ),
                               ],
+                            ),
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 50,
+                              child: ElevatedButton.icon(
+                                onPressed:
+                                    widget.listing.userId ==
+                                        context
+                                            .read<UserProvider>()
+                                            .currentUser
+                                            ?.id
+                                    ? null
+                                    : _openWhatsApp,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(
+                                    0xFF25D366,
+                                  ), // WhatsApp Green
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  elevation: 0,
+                                ),
+                                icon: const Icon(Icons.chat, size: 20),
+                                label: const Text(
+                                  'Chat on WhatsApp',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
                             ),
                           ],
                         ),

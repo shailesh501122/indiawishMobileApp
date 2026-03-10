@@ -6,6 +6,9 @@ import '../../providers/user_provider.dart';
 import '../marketplace/my_listings_screen.dart';
 import 'edit_profile_screen.dart';
 import 'verification_screen.dart';
+import 'referral_screen.dart';
+import '../services/provider_leads_screen.dart';
+import '../marketplace/seller_analytics_screen.dart';
 import '../../widgets/verification_badge.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -314,6 +317,30 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ),
                     _MenuItem(
+                      Icons.bar_chart_outlined,
+                      'Analytics Dashboard',
+                      'Track views and leads for your ads',
+                      badge: 'New',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const SellerAnalyticsScreen(),
+                        ),
+                      ),
+                    ),
+                    _MenuItem(
+                      Icons.work_outline,
+                      'Provider Service Leads',
+                      'View and accept new job requests',
+                      badge: 'New',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ProviderLeadsScreen(),
+                        ),
+                      ),
+                    ),
+                    _MenuItem(
                       Icons.star_border_outlined,
                       user.isElite
                           ? 'Elite Member Active'
@@ -324,6 +351,18 @@ class ProfileScreen extends StatelessWidget {
                       onTap: () => provider.toggleElite(),
                     ),
                     _MenuItem(
+                      Icons.card_giftcard,
+                      'Invite & Earn',
+                      'Share your code and earn ₹50 credit',
+                      badge: '🎁',
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ReferralScreen(),
+                        ),
+                      ),
+                    ),
+                    _MenuItem(
                       Icons.storefront_outlined,
                       'Become an Elite Seller',
                       'Unlock direct calls from buyers',
@@ -332,20 +371,28 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     _MenuItem(
                       Icons.verified_user_outlined,
-                      user.verificationLevel == 'phone' || user.verificationLevel == 'id' || user.verificationLevel == 'top_seller'
+                      user.verificationLevel == 'phone' ||
+                              user.verificationLevel == 'id' ||
+                              user.verificationLevel == 'top_seller'
                           ? '✅ Phone Verified'
                           : 'Verify Phone Number',
                       user.verificationLevel == 'unverified'
                           ? 'Get a verified badge to boost trust'
                           : 'Your phone is verified',
-                      badge: user.verificationLevel == 'unverified' ? 'New' : null,
-                      onTap: user.verificationLevel == 'unverified' ? () async {
-                        final result = await Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const VerificationScreen()),
-                        );
-                        if (result == true) provider.fetchProfile();
-                      } : null,
+                      badge: user.verificationLevel == 'unverified'
+                          ? 'New'
+                          : null,
+                      onTap: user.verificationLevel == 'unverified'
+                          ? () async {
+                              final result = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const VerificationScreen(),
+                                ),
+                              );
+                              if (result == true) provider.fetchProfile();
+                            }
+                          : null,
                     ),
                     _MenuItem(
                       Icons.settings_outlined,

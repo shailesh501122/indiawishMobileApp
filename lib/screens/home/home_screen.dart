@@ -13,6 +13,7 @@ import '../../providers/discovery_provider.dart';
 import '../../widgets/location_selector_modal.dart';
 import '../services/services_list_screen.dart';
 import '../../providers/services_provider.dart';
+import '../../providers/deals_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../notifications/notification_history_screen.dart';
 
@@ -35,6 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context.read<ConfigProvider>().fetchConfigs();
       context.read<DiscoveryProvider>().fetchNearbyPlaces();
       context.read<ServicesProvider>().fetchCategories();
+      context.read<DealsProvider>().fetchNearbyDeals();
       _determinePosition();
     });
   }
@@ -107,11 +109,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   onRefresh: () async {
                     final provider = context.read<MarketplaceProvider>();
                     final servicesProv = context.read<ServicesProvider>();
+                    final dealsProv = context.read<DealsProvider>();
                     await Future.wait([
                       provider.fetchCategories(),
                       provider.fetchFreshRecommendations(),
                       provider.fetchRecentInteractions(),
                       servicesProv.fetchCategories(),
+                      dealsProv.fetchNearbyDeals(),
                     ]);
                   },
                   child: SingleChildScrollView(
@@ -122,6 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         _buildCategorySection(),
                         _buildHomeServicesSection(),
                         const SizedBox(height: 16),
+                        _buildDealsSection(),
                         _buildRecentInteractionsSection(context),
                         _buildFreshRecommendations(context),
                         const SizedBox(height: 80),
@@ -882,6 +887,213 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 },
               ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildDealsSection() {
+    return Consumer<DealsProvider>(
+      builder: (context, provider, child) {
+        if (provider.isLoading) {
+          return const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          );
+        }
+
+        if (provider.nearbyDeals.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Deals Near You',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.darkText,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.local_fire_department,
+                          color: Colors.red,
+                          size: 14,
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          'HOT',
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(
+              height: 220,
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                scrollDirection: Axis.horizontal,
+                itemCount: provider.nearbyDeals.length,
+                itemBuilder: (context, index) {
+                  final deal = provider.nearbyDeals[index];
+                  final discountPercent =
+                      ((deal.originalPrice - deal.discountPrice) /
+                              deal.originalPrice *
+                              100)
+                          .toInt();
+
+                  return Container(
+                    width: 260,
+                    margin: const EdgeInsets.only(right: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Stack(
+                            children: [
+                              Container(
+                                height: 120,
+                                width: double.infinity,
+                                color: AppColors.lightGrey,
+                                child: deal.imageUrl != null
+                                    ? Image.network(
+                                        deal.imageUrl!,
+                                        fit: BoxFit.cover,
+                                      )
+                                    : const Icon(
+                                        Icons.local_offer,
+                                        size: 40,
+                                        color: AppColors.grey,
+                                      ),
+                              ),
+                              Positioned(
+                                top: 8,
+                                left: 8,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    '$discountPercent% OFF',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  deal.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Text(
+                                      '₹${deal.discountPrice.toStringAsFixed(0)}',
+                                      style: const TextStyle(
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '₹${deal.originalPrice.toStringAsFixed(0)}',
+                                      style: const TextStyle(
+                                        color: AppColors.grey,
+                                        decoration: TextDecoration.lineThrough,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.timer,
+                                      size: 12,
+                                      color: AppColors.grey,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Expires \n${deal.expiryDate}',
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: AppColors.grey,
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
           ],
         );
       },

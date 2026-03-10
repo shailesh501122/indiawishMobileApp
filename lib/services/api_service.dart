@@ -13,6 +13,9 @@ import '../models/discovery_place.dart';
 import '../models/service_profile.dart';
 import '../models/service_booking.dart';
 import '../models/service_category.dart';
+import '../models/service_lead.dart';
+import '../models/local_deal.dart';
+import '../models/listing_analytics.dart';
 
 class ApiService {
   late final Dio _dio;
@@ -518,6 +521,50 @@ class ApiService {
     }
   }
 
+  Future<List<ListingAnalytics>> getSellerAnalytics() async {
+    try {
+      final response = await _dio.get('/marketplace/analytics');
+      if (response.statusCode == 200) {
+        return (response.data as List)
+            .map((json) => ListingAnalytics.fromJson(json))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Error fetching seller analytics: $e');
+      return [];
+    }
+  }
+
+  // ─── Local Deals ─────────────────────────────────────────────────────────
+
+  Future<List<LocalDeal>> getNearbyDeals({
+    double? lat,
+    double? lng,
+    double? radiusKm,
+  }) async {
+    try {
+      final Map<String, dynamic> queryParams = {};
+      if (lat != null) queryParams['lat'] = lat;
+      if (lng != null) queryParams['lng'] = lng;
+      if (radiusKm != null) queryParams['radius_km'] = radiusKm;
+
+      final response = await _dio.get(
+        '/marketplace/deals/nearby',
+        queryParameters: queryParams,
+      );
+      if (response.statusCode == 200) {
+        return (response.data as List)
+            .map((json) => LocalDeal.fromJson(json))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Error fetching nearby deals: $e');
+      return [];
+    }
+  }
+
   Future<bool> followUser(String userId) async {
     try {
       final response = await _dio.post('/users/$userId/follow');
@@ -826,6 +873,46 @@ class ApiService {
     } catch (e) {
       debugPrint('Error fetching my service bookings: $e');
       return [];
+    }
+  }
+
+  // ─── Auto Lead Distribution ───────────────────────────────────────────────
+
+  Future<ServiceLead?> createServiceLead(Map<String, dynamic> leadData) async {
+    try {
+      final response = await _dio.post('/services/leads', data: leadData);
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return ServiceLead.fromJson(Map<String, dynamic>.from(response.data));
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error creating service lead: $e');
+      return null;
+    }
+  }
+
+  Future<List<LeadAssignment>> getProviderLeads() async {
+    try {
+      final response = await _dio.get('/services/leads');
+      if (response.statusCode == 200) {
+        return (response.data as List)
+            .map((json) => LeadAssignment.fromJson(json))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('Error fetching provider leads: $e');
+      return [];
+    }
+  }
+
+  Future<bool> updateLeadStatus(String assignmentId, String status) async {
+    try {
+      final response = await _dio.put('/services/leads/$assignmentId/$status');
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint('Error updating lead status: $e');
+      return false;
     }
   }
 

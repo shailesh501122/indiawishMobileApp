@@ -11,6 +11,8 @@ class UserBasic {
   final int followingCount;
   final bool isElite;
   final String verificationLevel; // 'unverified', 'phone', 'id', 'top_seller'
+  final String? referralCode;
+  final double referralRewardBalance;
 
   UserBasic({
     required this.id,
@@ -25,6 +27,8 @@ class UserBasic {
     this.followingCount = 0,
     this.isElite = false,
     this.verificationLevel = 'unverified',
+    this.referralCode,
+    this.referralRewardBalance = 0.0,
   });
 
   /// The backend returns snake_case from /users/me but camelCase from /auth/login user field.
@@ -50,7 +54,16 @@ class UserBasic {
       followerCount: json['follower_count'] ?? json['followerCount'] ?? 0,
       followingCount: json['following_count'] ?? json['followingCount'] ?? 0,
       isElite: json['is_elite'] ?? json['isElite'] ?? false,
-      verificationLevel: json['verification_level'] ?? json['verificationLevel'] ?? 'unverified',
+      verificationLevel:
+          json['verification_level'] ??
+          json['verificationLevel'] ??
+          'unverified',
+      referralCode: json['referral_code'] ?? json['referralCode'],
+      referralRewardBalance:
+          (json['referral_reward_balance'] ??
+                  json['referralRewardBalance'] ??
+                  0.0)
+              .toDouble(),
     );
   }
 

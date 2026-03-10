@@ -40,15 +40,33 @@ class NotificationService {
     int id = 0,
     required String title,
     required String body,
+    String channelId = 'general',
     String? payload,
   }) async {
     if (kIsWeb) return;
 
-    const AndroidNotificationDetails androidDetails =
+    String channelName = 'General';
+    String description = 'General Notifications';
+
+    if (channelId == 'chat_messages') {
+      channelName = 'Chat Messages';
+      description = 'Notifications for new chat messages';
+    } else if (channelId == 'service_leads') {
+      channelName = 'Service Leads';
+      description = 'Notifications for new service job requests';
+    } else if (channelId == 'referral_rewards') {
+      channelName = 'Referral Rewards';
+      description = 'Notifications for referral signups and credits';
+    } else if (channelId == 'local_deals') {
+      channelName = 'Local Deals';
+      description = 'Notifications for new deals and offers';
+    }
+
+    final AndroidNotificationDetails androidDetails =
         AndroidNotificationDetails(
-          'chat_messages',
-          'Chat Messages',
-          channelDescription: 'Notifications for new chat messages',
+          channelId,
+          channelName,
+          channelDescription: description,
           importance: Importance.max,
           priority: Priority.high,
           showWhen: true,
@@ -56,7 +74,7 @@ class NotificationService {
 
     const DarwinNotificationDetails iosDetails = DarwinNotificationDetails();
 
-    const NotificationDetails details = NotificationDetails(
+    final NotificationDetails details = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
     );

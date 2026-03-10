@@ -9,6 +9,7 @@ import 'providers/discovery_provider.dart';
 import 'providers/services_provider.dart';
 import 'providers/search_provider.dart';
 import 'providers/notification_provider.dart';
+import 'providers/deals_provider.dart';
 import 'screens/auth/splash_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/main_screens_wrapper.dart';
@@ -33,6 +34,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ServicesProvider()),
         ChangeNotifierProvider(create: (_) => SearchProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProvider(create: (_) => DealsProvider()),
       ],
       child: const IndiaWishApp(),
     ),
